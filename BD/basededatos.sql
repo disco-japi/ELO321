@@ -1,26 +1,10 @@
--- se borra la DB si existia para hacer facil las pruebas y se crea una nueva llamada basesita
-DROP DATABASE IF EXISTS basesita;
-CREATE DATABASE basesita;
-USE basesita;
+DROP DATABASE IF EXISTS telefactory;
+CREATE DATABASE telefactory;
+USE telefactory;
 
--- importante rellenar estas tablas primero para el correcto funcionamiento de todo
--- como pasamos de posrgre a mysql, se decio crear estas tablas para almacenar los topicos y los ambientes
-CREATE TABLE Ambientes(
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(30) UNIQUE NOT NULL
-);
 
-CREATE TABLE Topicos(
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(50) UNIQUE NOT NULL
-);
 
-CREATE TABLE Estado(
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(50) UNIQUE NOT NULL
-);
-
--- Se decidio crear la super entidad persona y las subentidades usuario e ingeniero haciendo uso de herencia
+-- Se decidio crear la super entidad persona y las subentidades usuario e administrador haciendo uso de herencia
 CREATE TABLE Persona(
     rut VARCHAR(12) PRIMARY KEY,
     nombre VARCHAR(50) NOT NULL,
@@ -35,7 +19,7 @@ CREATE TABLE Usuario(
         ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-CREATE TABLE Ingeniero(
+CREATE TABLE Administrador(
     rut VARCHAR(12) PRIMARY KEY,
     FOREIGN KEY (rut) REFERENCES Persona(rut)
         ON DELETE CASCADE ON UPDATE CASCADE
@@ -44,15 +28,15 @@ CREATE TABLE Ingeniero(
 
 DELIMITER //
 
---triggers para impedir que un usuario sea ingeniero y tambien que un ingeniero sea usuario
+--triggers para impedir que un usuario sea administrador y tambien que un administrador sea usuario
 CREATE TRIGGER trg_usuario BEFORE INSERT ON Usuario FOR EACH ROW 
 BEGIN 
-    IF EXISTS (SELECT 1 FROM Ingeniero WHERE rut = NEW.rut) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'RUT ya detectado en un ingeniero, no es posible usarlo';
+    IF EXISTS (SELECT 1 FROM Administrador WHERE rut = NEW.rut) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'RUT ya detectado en un administrador, no es posible usarlo';
     END IF;
 END;
 //
 
-CREATE TRIGGER trg_ingeniero BEFORE INSERT ON Ingeniero FOR EACH ROW 
+CREATE TRIGGER trg_administrador BEFORE INSERT ON Administrador FOR EACH ROW 
 BEGIN 
     IF EXISTS (SELECT 1 FROM Usuario WHERE rut = NEW.rut) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'RUT ya detectado en un usuario, no es posible usarlo';
     END IF;
@@ -61,40 +45,7 @@ END;
 
 DELIMITER ;
 
--- tabla de union entre Ingeniero y Topico
-CREATE TABLE Ingeniero_Topico(
-    rut_ingeniero VARCHAR(12) NOT NULL,
-    id_topico INT NOT NULL,
-    PRIMARY KEY (rut_ingeniero, id_topico),
-    FOREIGN KEY (rut_ingeniero) REFERENCES Ingeniero(rut) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (id_topico) REFERENCES Topicos(id) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
--- tablas de funcionalidad
-CREATE TABLE SolicitudesFuncionalidad(
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    titulo VARCHAR(100) UNIQUE NOT NULL,
-    ambiente_id INT NOT NULL,
-    resumen VARCHAR(150) NOT NULL,
-    topico_id INT NOT NULL,
-    solicitante_rut VARCHAR(12) NOT NULL,
-    estado_id INT NOT NULL,
-    fecha_creacion DATE NOT NULL,
-    FOREIGN KEY (ambiente_id) REFERENCES Ambientes(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    FOREIGN KEY (topico_id) REFERENCES Topicos(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    FOREIGN KEY (estado_id) REFERENCES Estado(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-    FOREIGN KEY (solicitante_rut) REFERENCES Usuario(rut) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
---tabla para hacer cumplir lo de los criterios de aceptacion
-CREATE TABLE CriteriosAceptacion(
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    id_funcionalidad INT NOT NULL,
-    descripcion VARCHAR(150) NOT NULL,
-    FOREIGN KEY (id_funcionalidad) REFERENCES SolicitudesFuncionalidad(id) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
---tabla de gestion de errores
+--tabla de gestion de compra
 CREATE TABLE GestionErrores(
     id INT AUTO_INCREMENT PRIMARY KEY,
     titulo VARCHAR(100) UNIQUE NOT NULL,
@@ -108,163 +59,17 @@ CREATE TABLE GestionErrores(
     FOREIGN KEY (estado_id) REFERENCES Estado(id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
--- tablas de asignacion de funcionalidades y errores, resultado de la normalizacion de Asignacion
-CREATE TABLE Asignacion_Funcionalidad(
-    id_funcionalidad INT NOT NULL,
-    rut_ingeniero VARCHAR(12) NOT NULL,
-    fecha_asignacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id_funcionalidad, rut_ingeniero),
-    FOREIGN KEY (id_funcionalidad) REFERENCES SolicitudesFuncionalidad(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (rut_ingeniero) REFERENCES Ingeniero(rut) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
-CREATE TABLE Asignacion_Error(
-    id_error INT NOT NULL,
-    rut_ingeniero VARCHAR(12) NOT NULL,
-    fecha_asignacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id_error, rut_ingeniero),
-    FOREIGN KEY (id_error) REFERENCES GestionErrores(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (rut_ingeniero) REFERENCES Ingeniero(rut) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
-CREATE TABLE Resena_Funcionalidad(
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    id_funcionalidad INT NOT NULL,
-    rut_ingeniero VARCHAR(12) NOT NULL,
-    observacion TEXT NOT NULL,
-    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_funcionalidad) REFERENCES SolicitudesFuncionalidad(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (rut_ingeniero) REFERENCES Ingeniero(rut) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (id_funcionalidad, rut_ingeniero) REFERENCES Asignacion_Funcionalidad(id_funcionalidad, rut_ingeniero) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
 CREATE TABLE Resena_Error(
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_error INT NOT NULL,
-    rut_ingeniero VARCHAR(12) NOT NULL,
+    rut_administrador VARCHAR(12) NOT NULL,
     observacion TEXT NOT NULL,
     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (id_error) REFERENCES GestionErrores(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (rut_ingeniero) REFERENCES Ingeniero(rut) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (id_error, rut_ingeniero) REFERENCES Asignacion_Error(id_error, rut_ingeniero) ON DELETE CASCADE ON UPDATE CASCADE
+    FOREIGN KEY (rut_administrador) REFERENCES Administrador(rut) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (id_error, rut_administrador) REFERENCES Asignacion_Error(id_error, rut_administrador) ON DELETE CASCADE ON UPDATE CASCADE
 );
-
-
-DELIMITER //
-
---se crean estos triggers y funciones para hacer cumplir lo indicado en la tarea 1
--- 1. se asignaran maximo 3 ingenieros por funcionalidad/error
--- 2. un ingeniero puede tener maximo 20 asignaciones
--- 3. un usuario puede publicar un maximo de 25 errores y funcionalidades
-
-
--- se crea esta funcion para usarla en los triggers de limites de 20 asignaciones a cada ingeniero en total sumando funcionalidades y errores
-CREATE FUNCTION limitante_asignacion(p_rut VARCHAR(12)) RETURNS BOOLEAN DETERMINISTIC 
-BEGIN 
-    DECLARE total INT;
-    SELECT ((SELECT COUNT(*) FROM Asignacion_Funcionalidad WHERE rut_ingeniero = p_rut) +
-            (SELECT COUNT(*) FROM Asignacion_Error WHERE rut_ingeniero = p_rut)) INTO total;
-    RETURN total >= 20;
-END;
-//
-
--- esta funcion sirve para contar la cantidad de ingeniros asignados a un error o solicitud y usarlo en los triggers de trg_maximo_tres_ingenieros_funcionalidad y trg_maximo_tres_ingenieros_error
-CREATE FUNCTION contador_ingenieros(p_tipo VARCHAR(20), p_id INT) RETURNS INT DETERMINISTIC 
-BEGIN 
-    DECLARE total INT DEFAULT 0;
-    IF p_tipo = 'funcionalidad' THEN SELECT COUNT(*) INTO total FROM Asignacion_Funcionalidad WHERE id_funcionalidad = p_id;
-    ELSEIF p_tipo = 'error' THEN SELECT COUNT(*) INTO total FROM Asignacion_Error WHERE id_error = p_id;
-    END IF;
-    RETURN total;
-END;
-//
-
--- trigger para cumplir el limite de 20 asignaciones veindo la tabla de funcionalidades
-CREATE TRIGGER trg_maximo_funcionalidad BEFORE INSERT ON Asignacion_Funcionalidad FOR EACH ROW 
-BEGIN 
-    IF limitante_asignacion(NEW.rut_ingeniero) THEN  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Limite de asignaciones por ingeniero alcanzado (20)';
-    END IF;
-END;
-//
-
--- lo mismo que la anterior pero para las errores
-CREATE TRIGGER trg_maximo_error BEFORE INSERT ON Asignacion_Error FOR EACH ROW 
-BEGIN 
-    IF limitante_asignacion(NEW.rut_ingeniero) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Limite de asignaciones por ingeniero alcanzado (20)';
-    END IF;
-END;
-//
-
--- trigger para el maximo de 25 de funcionalidades por usuario
-CREATE TRIGGER trg_maximo_funcionalidades_usuarios BEFORE INSERT ON SolicitudesFuncionalidad FOR EACH ROW 
-BEGIN 
-    DECLARE num_func INT;
-    SELECT COUNT(*) INTO num_func FROM SolicitudesFuncionalidad WHERE solicitante_rut = NEW.solicitante_rut AND DATE(fecha_creacion) = DATE(NEW.fecha_creacion);
-    IF num_func >= 25 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'maximo de solicitudes de funcionalidades por usuario alcanzado (25)';
-    END IF;
-END;
-//
-
--- lo mismo que la anterior pero para los 25 errores
-CREATE TRIGGER trg_maximo_errores_usuario BEFORE INSERT ON GestionErrores FOR EACH ROW 
-BEGIN 
-    DECLARE num_err INT;
-    SELECT COUNT(*) INTO num_err FROM GestionErrores WHERE autor_rut = NEW.autor_rut AND DATE(fecha_publicacion) = DATE(NEW.fecha_publicacion);
-    IF num_err >= 25 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'maximo de solicitudes de errores por usuario alcanzado (25)';
-    END IF;
-END;
-//
-
---procedimento para asignar automaticamente a una funcionalidad un ingeniero
-CREATE PROCEDURE asignar_ingenieros_funcionalidad(IN p_id_funcionalidad INT)
-BEGIN 
-    DECLARE v_topico INT; 
-    SELECT topico_id INTO v_topico FROM SolicitudesFuncionalidad WHERE id = p_id_funcionalidad;
-    INSERT INTO Asignacion_Funcionalidad (id_funcionalidad, rut_ingeniero) SELECT p_id_funcionalidad, e.rut FROM Ingeniero e JOIN Ingeniero_Topico it ON e.rut = it.rut_ingeniero WHERE it.id_topico = v_topico ORDER BY ((SELECT COUNT(*) FROM Asignacion_Funcionalidad af WHERE af.rut_ingeniero = e.rut) + (SELECT COUNT(*) FROM Asignacion_Error ae WHERE ae.rut_ingeniero = e.rut)), RAND()LIMIT 3;
-END;
-//
---lo mismo que el de arriba pero para los errores
-CREATE PROCEDURE asignar_ingenieros_error(IN p_id_error INT)
-BEGIN 
-    DECLARE v_topico INT;
-    SELECT topico_id INTO v_topico FROM GestionErrores WHERE id = p_id_error;
-    INSERT INTO Asignacion_Error (id_error, rut_ingeniero) SELECT p_id_error, e.rut FROM Ingeniero e JOIN Ingeniero_Topico it ON e.rut = it.rut_ingeniero WHERE it.id_topico = v_topico ORDER BY ((SELECT COUNT(*) FROM Asignacion_Funcionalidad af WHERE af.rut_ingeniero = e.rut) + (SELECT COUNT(*) FROM Asignacion_Error ae WHERE ae.rut_ingeniero = e.rut)), RAND() LIMIT 3;
-END;
-//
-
---ahora el trigger para hacer uso del procedimiento de autoasignado de funcionalidades 
-CREATE TRIGGER trg_auto_asignar_funcionalidad AFTER INSERT ON SolicitudesFuncionalidad FOR EACH ROW 
-BEGIN 
-    CALL asignar_ingenieros_funcionalidad(NEW.id);
-END;
-//
-
---lo mismo que arriba pero para autoasginar en errores
-CREATE TRIGGER trg_auto_asignar_error AFTER INSERT ON GestionErrores FOR EACH ROW 
-BEGIN 
-    CALL asignar_ingenieros_error(NEW.id);
-END;
-//
-
--- trigger para el maximo de 3 ingenieros asignados a una funcion
-CREATE TRIGGER trg_maximo_tres_ingenieros_funcionalidad AFTER INSERT ON Asignacion_Funcionalidad FOR EACH ROW 
-BEGIN
-    IF contador_ingenieros('funcionalidad', NEW.id_funcionalidad) > 3 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El maximo por funcionalidad son 3 ingenieros';
-    END IF;
-END;
-//
-
---lo mismo que el trigger anterior pero en los errores
-CREATE TRIGGER trg_maximo_tres_ingenieros_error AFTER INSERT ON Asignacion_Error FOR EACH ROW 
-BEGIN
-    IF contador_ingenieros('error', NEW.id_error) > 3 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El maximo por error es 3 ingenieros';
-    END IF;
-END;
-//
-
-DELIMITER ;
 
 --procedimiento de registrar una persona
 DELIMITER //
@@ -273,8 +78,8 @@ CREATE PROCEDURE registrar_persona(IN p_rut VARCHAR(12), IN p_nombre VARCHAR(50)
 BEGIN 
     INSERT INTO Persona (rut, nombre, email, nombre_usuario, contrasena) VALUES (p_rut, p_nombre, p_email, p_nombre_usuario, p_contrasena);
     IF p_rol = 'usuario' THEN INSERT INTO Usuario (rut) VALUES (p_rut);
-    ELSEIF p_rol = 'ingeniero' THEN INSERT INTO Ingeniero (rut) VALUES (p_rut);
-    ELSE SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Rol incorrecto, debe ser usuario o ingeniero';
+    ELSEIF p_rol = 'administrador' THEN INSERT INTO Administrador (rut) VALUES (p_rut);
+    ELSE SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Rol incorrecto, debe ser usuario o administrador';
     END IF;
 END;
 //
@@ -287,7 +92,7 @@ BEGIN
     SELECT rut INTO v_rut FROM Persona WHERE nombre_usuario = p_nombre_usuario AND contrasena = p_contrasena;
     IF v_rut IS NULL THEN RETURN 'No existe';
     END IF;
-    IF EXISTS (SELECT 1 FROM Ingeniero WHERE rut = v_rut) THEN SET v_rol = 'Ingeniero';
+    IF EXISTS (SELECT 1 FROM Administrador WHERE rut = v_rut) THEN SET v_rol = 'Administrador';
     ELSEIF EXISTS (SELECT 1 FROM Usuario WHERE rut = v_rut) THEN SET v_rol = 'Usuario';
     ELSE SET v_rol = 'SinRol';
     END IF;
@@ -297,72 +102,7 @@ END;
 
 --procedimentos CRUD para las funcinalidades
 
--- procediemento de creacion o registro
-CREATE PROCEDURE registrar_funcionalidad(IN p_titulo VARCHAR(100), IN p_descripcion TEXT, IN p_solicitante_rut VARCHAR(12), IN p_ambiente_id INT, IN p_topico_id INT, IN p_estado_id INT, IN p_criterio1 VARCHAR(150), IN p_criterio2 VARCHAR(150), IN p_criterio3 VARCHAR(150))
-BEGIN
-    DECLARE v_id_funcionalidad INT;
-    INSERT INTO SolicitudesFuncionalidad (titulo, resumen, fecha_creacion, solicitante_rut, ambiente_id, topico_id, estado_id) VALUES (p_titulo, p_descripcion, CURDATE(), p_solicitante_rut, p_ambiente_id, p_topico_id, p_estado_id);
-    SET v_id_funcionalidad = LAST_INSERT_ID();
-    INSERT INTO CriteriosAceptacion (id_funcionalidad, descripcion) VALUES (v_id_funcionalidad, p_criterio1), (v_id_funcionalidad, p_criterio2), (v_id_funcionalidad, p_criterio3);
-END;
-//
-
 -- PROCEDIMIENTROS CRUD DE LAS SOLICITUDES
-
---procedimiento para el READ o lectura de funcionalidad
-CREATE PROCEDURE leer_funcionalidad_usuario(
-    IN p_id_funcionalidad INT,
-    IN p_solicitante_rut VARCHAR(12)
-)
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM SolicitudesFuncionalidad  WHERE id = p_id_funcionalidad AND solicitante_rut = p_solicitante_rut) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Funcionalidad no encontrada o no tiene permisos para verla';
-    END IF;
-
-    SELECT sf.id, sf.titulo, sf.resumen, a.nombre AS ambiente, a.id AS ambiente_id, t.nombre AS topico, t.id AS topico_id, e.nombre AS estado, e.id AS estado_id, sf.fecha_creacion, p.nombre AS solicitante, sf.solicitante_rut
-    FROM SolicitudesFuncionalidad sf
-    JOIN Ambientes a ON sf.ambiente_id = a.id
-    JOIN Topicos t ON sf.topico_id = t.id
-    JOIN Estado e ON sf.estado_id = e.id
-    JOIN Persona p ON sf.solicitante_rut = p.rut
-    WHERE sf.id = p_id_funcionalidad;
-    SELECT id, descripcion FROM CriteriosAceptacion WHERE id_funcionalidad = p_id_funcionalidad ORDER BY id;
-END;
-//
-
---procediimeinto para el UPDATE o modificacion de funcionalidad
-CREATE PROCEDURE modificar_funcionalidad(IN p_id_funcionalidad INT, IN p_solicitante_rut VARCHAR(12), IN p_titulo VARCHAR(100), IN p_descripcion TEXT, IN p_ambiente_id INT, IN p_estado_id INT, IN p_criterio1 VARCHAR(150), IN p_criterio2 VARCHAR(150), IN p_criterio3 VARCHAR(150))
-BEGIN
-    DECLARE v_estado_nombre VARCHAR(50);
-    IF NOT EXISTS (SELECT 1 FROM SolicitudesFuncionalidad WHERE id = p_id_funcionalidad AND solicitante_rut = p_solicitante_rut) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No puede modificar una solicitud que no le pertenece.';
-    END IF;
-
-    SELECT E.nombre INTO v_estado_nombre FROM SolicitudesFuncionalidad SF JOIN Estado E ON SF.estado_id = E.id WHERE SF.id = p_id_funcionalidad;
-    IF v_estado_nombre = 'En Progreso' THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Esta prohibido modificar una solicitud en progreso.';
-    END IF;
-
-    UPDATE SolicitudesFuncionalidad
-    SET titulo = p_titulo, resumen = p_descripcion, ambiente_id = p_ambiente_id, estado_id = p_estado_id WHERE id = p_id_funcionalidad;
-
-    DELETE FROM CriteriosAceptacion WHERE id_funcionalidad = p_id_funcionalidad;
-    INSERT INTO CriteriosAceptacion (id_funcionalidad, descripcion) VALUES (p_id_funcionalidad, p_criterio1), (p_id_funcionalidad, p_criterio2), (p_id_funcionalidad, p_criterio3);
-END;
-//
-
---prodecimiento para el DELETE o eliminacion de funcionalidad
-CREATE PROCEDURE eliminar_funcionalidad(IN p_id_funcionalidad INT, IN p_solicitante_rut VARCHAR(12))
-BEGIN
-    DECLARE v_estado_nombre VARCHAR(50);
-    IF NOT EXISTS (SELECT 1 FROM SolicitudesFuncionalidad WHERE id = p_id_funcionalidad AND solicitante_rut = p_solicitante_rut) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No puede eliminar una solicitud que no le pertenece.';
-    END IF;
-
-    SELECT E.nombre INTO v_estado_nombre FROM SolicitudesFuncionalidad SF JOIN Estado E ON SF.estado_id = E.id WHERE SF.id = p_id_funcionalidad;
-    IF v_estado_nombre = 'En Progreso' THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Imposible de eliminar, la funcionalidad se encuebntra en progreso.';
-    END IF;
-
-    DELETE FROM CriteriosAceptacion WHERE id_funcionalidad = p_id_funcionalidad;
-    DELETE FROM SolicitudesFuncionalidad WHERE id = p_id_funcionalidad;
-END;
-//
 
 
 --procedimiento para CREATE del error
@@ -425,91 +165,13 @@ BEGIN
 END;
 //
 
--- procedimiento para CREATE reseña de funcionalidad
-CREATE PROCEDURE crear_resena_funcionalidad(IN p_id_funcionalidad INT, IN p_rut_ingeniero VARCHAR(12), IN p_observacion TEXT)
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM Asignacion_Funcionalidad WHERE id_funcionalidad = p_id_funcionalidad AND rut_ingeniero = p_rut_ingeniero) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No tiene permisos para agregar reseñas a esta funcionalidad';
-    END IF;
-    INSERT INTO Resena_Funcionalidad (id_funcionalidad, rut_ingeniero, observacion) VALUES (p_id_funcionalidad, p_rut_ingeniero, p_observacion);
-END;
-//
-
---procedimiento para UPDATE reseña de funcionalidad
-CREATE PROCEDURE actualizar_resena_funcionalidad(IN p_id_resena INT, IN p_rut_ingeniero VARCHAR(12), IN p_nueva_observacion TEXT)
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM Resena_Funcionalidad WHERE id = p_id_resena AND rut_ingeniero = p_rut_ingeniero) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Reseña no encontrada o no tiene permisos para modificarla';
-    END IF;
-    
-    UPDATE Resena_Funcionalidad 
-    SET observacion = p_nueva_observacion, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = p_id_resena;
-END;
-//
-
--- procedimiento para DELETE reseña de funcionalidad
-CREATE PROCEDURE eliminar_resena_funcionalidad(IN p_id_resena INT, IN p_rut_ingeniero VARCHAR(12))
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM Resena_Funcionalidad WHERE id = p_id_resena AND rut_ingeniero = p_rut_ingeniero) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Reseña no encontrada o no tiene permisos para eliminarla';
-    END IF;
-    DELETE FROM Resena_Funcionalidad WHERE id = p_id_resena;
-END;
-//
-
--- procedimiento para CREATE resena error
-CREATE PROCEDURE crear_resena_error(IN p_id_error INT, IN p_rut_ingeniero VARCHAR(12), IN p_observacion TEXT)
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM Asignacion_Error WHERE id_error = p_id_error AND rut_ingeniero = p_rut_ingeniero) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No tiene permisos para agregar reseñas a este error';
-    END IF;
-    INSERT INTO Resena_Error (id_error, rut_ingeniero, observacion) VALUES (p_id_error, p_rut_ingeniero, p_observacion);
-END;
-//
-
--- procedimiento para ACTUALIZAR reseña de un error
-CREATE PROCEDURE actualizar_resena_error(IN p_id_resena INT, IN p_rut_ingeniero VARCHAR(12), IN p_nueva_observacion TEXT)
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM Resena_Error WHERE id = p_id_resena AND rut_ingeniero = p_rut_ingeniero) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Reseña no encontrada o no tiene permisos para modificarla';
-    END IF;
-    
-    UPDATE Resena_Error 
-    SET observacion = p_nueva_observacion, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = p_id_resena;
-END;
-//
-
--- Procedimiento para ELIMINAR reseña en error
-CREATE PROCEDURE eliminar_resena_error(IN p_id_resena INT, IN p_rut_ingeniero VARCHAR(12))
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM Resena_Error WHERE id = p_id_resena AND rut_ingeniero = p_rut_ingeniero) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Reseña no encontrada o no tiene permisos para eliminarla';
-    END IF;
-    DELETE FROM Resena_Error WHERE id = p_id_resena;
-END;
-//
-
 
 DELIMITER ;
-
---vista para todas las asignaciones de un ingeniero
-CREATE VIEW Vista_Asignaciones_Ingeniero AS SELECT i.rut AS rut_ingeniero, p.nombre AS nombre_ingeniero, 'Funcionalidad' AS tipo, sf.id AS id_elemento, sf.titulo AS titulo, sf.resumen AS descripcion, a.nombre AS ambiente, t.nombre AS topico, e.nombre AS estado, af.fecha_asignacion
-FROM Asignacion_Funcionalidad af
-JOIN Ingeniero i ON af.rut_ingeniero = i.rut
-JOIN Persona p ON i.rut = p.rut
-JOIN SolicitudesFuncionalidad sf ON af.id_funcionalidad = sf.id
-JOIN Ambientes a ON sf.ambiente_id = a.id
-JOIN Topicos t ON sf.topico_id = t.id
-JOIN Estado e ON sf.estado_id = e.id
-UNION ALL
-SELECT i.rut AS rut_ingeniero, p.nombre AS nombre_ingeniero, 'Error' AS tipo, ge.id AS id_elemento, ge.titulo AS titulo, ge.descripcion AS descripcion, NULL AS ambiente, t.nombre AS topico, e.nombre AS estado, ae.fecha_asignacion
-FROM Asignacion_Error ae
-JOIN Ingeniero i ON ae.rut_ingeniero = i.rut
-JOIN Persona p ON i.rut = p.rut
-JOIN GestionErrores ge ON ae.id_error = ge.id
-JOIN Topicos t ON ge.topico_id = t.id
-JOIN Estado e ON ge.estado_id = e.id;
-
---vista para todas las solicitudes creadas por un usuario
-CREATE VIEW Vista_Publicaciones_Usuario AS SELECT u.rut AS rut_usuario, p.nombre AS nombre_usuario, 'Funcionalidad' AS tipo, sf.id AS id_elemento, sf.titulo AS titulo, sf.resumen AS descripcion, a.nombre AS ambiente, t.nombre AS topico, e.nombre AS estado, sf.fecha_creacion AS fecha
+--vista para todas las compras de un usuario
+CREATE VIEW Vista_Compras_Usuario AS SELECT u.rut AS rut_usuario, p.nombre AS nombre_usuario, 'Funcionalidad' AS tipo, sf.id AS id_elemento, sf.titulo AS titulo, sf.resumen AS descripcion, t.nombre AS topico, e.nombre AS estado, sf.fecha_creacion AS fecha
 FROM SolicitudesFuncionalidad sf
 JOIN Usuario u ON sf.solicitante_rut = u.rut
 JOIN Persona p ON u.rut = p.rut
-JOIN Ambientes a ON sf.ambiente_id = a.id
 JOIN Topicos t ON sf.topico_id = t.id
 JOIN Estado e ON sf.estado_id = e.id
 UNION ALL
@@ -521,23 +183,15 @@ JOIN Topicos t ON ge.topico_id = t.id
 JOIN Estado e ON ge.estado_id = e.id;
 
 INSERT INTO `Topicos` (`id`, `nombre`) VALUES
-(1, 'Backend'),
-(2, 'Seguridad'),
+(1, 'Hardware'),
+(2, 'Software'),
 (3, 'UX/UI');
 
 INSERT INTO `Estado` (`id`, `nombre`) VALUES
-(1, 'Abierto'),
-(4, 'Cerrado'),
-(2, 'En Progreso'),
-(3, 'Resuelto');
-
-INSERT INTO `Ambientes` (`id`, `nombre`) VALUES
-(2, 'Movil'),
-(1, 'Web');
-
-CALL registrar_persona('1234','user','user@gmail.com','user','user','usuario');
-CALL registrar_persona('5678','inge','inge@gmail.com','inge','inge','ingeniero');
-INSERT INTO `Ingeniero_Topico` (`rut_ingeniero`, `id_topico`) VALUES ('5678', '1');
+(1, 'En logistica'),
+(2, 'En camino'),
+(3, 'Recibido');
+(4, 'Confirmado'),
 
 -- ==== USUARIOS ====
 CALL registrar_persona('11111111-1', 'Carlos Peña', 'carlos.pena@example.com', 'cpena', '1234', 'usuario') ;
@@ -562,62 +216,23 @@ CALL registrar_persona('11111129-9', 'Ignacio Cabrera', 'ignacio.cabrera@example
 CALL registrar_persona('11111130-K', 'Daniela Morales', 'daniela.morales@example.com', 'dmorales', '1234', 'usuario') ;
 
 -- ==== INGENIEROS ====
-CALL registrar_persona('22222221-1', 'Rodrigo López', 'rodrigo.lopez@example.com', 'rlopez', '1234', 'ingeniero') ;
-INSERT INTO Ingeniero_Topico (rut_ingeniero, id_topico) VALUES ('22222221-1', '1');
-
-CALL registrar_persona('22222222-2', 'María Contreras', 'maria.contreras@example.com', 'mcontreras', '1234', 'ingeniero') ;
-INSERT INTO Ingeniero_Topico (rut_ingeniero, id_topico) VALUES ('22222222-2', '2');
-
-CALL registrar_persona('22222223-3', 'Felipe Navarro', 'felipe.navarro@example.com', 'fnavarro', '1234', 'ingeniero') ;
-INSERT INTO Ingeniero_Topico (rut_ingeniero, id_topico) VALUES ('22222223-3', '3');
-
-CALL registrar_persona('22222224-4', 'Carolina Vega', 'carolina.vega@example.com', 'cvega', '1234', 'ingeniero') ;
-INSERT INTO Ingeniero_Topico (rut_ingeniero, id_topico) VALUES ('22222224-4', '1');
-
-CALL registrar_persona('22222225-5', 'Jorge Díaz', 'jorge.diaz@example.com', 'jdiaz', '1234', 'ingeniero') ;
-INSERT INTO Ingeniero_Topico (rut_ingeniero, id_topico) VALUES ('22222225-5', '2');
-
-CALL registrar_persona('22222226-6', 'Francisca Romero', 'francisca.romero@example.com', 'fromero', '1234', 'ingeniero') ;
-INSERT INTO Ingeniero_Topico (rut_ingeniero, id_topico) VALUES ('22222226-6', '3');
-
-CALL registrar_persona('22222227-7', 'Ricardo Pérez', 'ricardo.perez@example.com', 'rperez', '1234', 'ingeniero') ;
-INSERT INTO Ingeniero_Topico (rut_ingeniero, id_topico) VALUES ('22222227-7', '1');
-
-CALL registrar_persona('22222228-8', 'Natalia Fuentes', 'natalia.fuentes@example.com', 'nfuentes', '1234', 'ingeniero') ;
-INSERT INTO Ingeniero_Topico (rut_ingeniero, id_topico) VALUES ('22222228-8', '2');
-
-CALL registrar_persona('22222229-9', 'Claudio Ramírez', 'claudio.ramirez@example.com', 'cramirez', '1234', 'ingeniero') ;
-INSERT INTO Ingeniero_Topico (rut_ingeniero, id_topico) VALUES ('22222229-9', '3');
-
-CALL registrar_persona('22222230-K', 'Beatriz Silva', 'beatriz.silva@example.com', 'bsilva', '1234', 'ingeniero') ;
-INSERT INTO Ingeniero_Topico (rut_ingeniero, id_topico) VALUES ('22222230-K', '1');
-
-CALL registrar_persona('22222231-1', 'Gonzalo Torres', 'gonzalo.torres@example.com', 'gtorres', '1234', 'ingeniero') ;
-INSERT INTO Ingeniero_Topico (rut_ingeniero, id_topico) VALUES ('22222231-1', '2');
-
-CALL registrar_persona('22222232-2', 'Andrea Paredes', 'andrea.paredes@example.com', 'aparedes', '1234', 'ingeniero') ;
-INSERT INTO Ingeniero_Topico (rut_ingeniero, id_topico) VALUES ('22222232-2', '3');
-
-CALL registrar_persona('22222233-3', 'Cristóbal Herrera', 'cristobal.herrera@example.com', 'cherrera', '1234', 'ingeniero') ;
-INSERT INTO Ingeniero_Topico (rut_ingeniero, id_topico) VALUES ('22222233-3', '1');
-
-CALL registrar_persona('22222234-4', 'Camila Vargas', 'camila.vargas@example.com', 'cvargas', '1234', 'ingeniero') ;
-INSERT INTO Ingeniero_Topico (rut_ingeniero, id_topico) VALUES ('22222234-4', '2');
-
-CALL registrar_persona('22222235-5', 'Sebastián Reyes', 'sebastian.reyes@example.com', 'sreyes', '1234', 'ingeniero') ;
-INSERT INTO Ingeniero_Topico (rut_ingeniero, id_topico) VALUES ('22222235-5', '3');
-
-CALL registrar_persona('22222236-6', 'Patricia Orellana', 'patricia.orellana@example.com', 'porellana', '1234', 'ingeniero') ;
-INSERT INTO Ingeniero_Topico (rut_ingeniero, id_topico) VALUES ('22222236-6', '1');
-
-CALL registrar_persona('22222237-7', 'Mauricio Salazar', 'mauricio.salazar@example.com', 'msalazar', '1234', 'ingeniero') ;
-INSERT INTO Ingeniero_Topico (rut_ingeniero, id_topico) VALUES ('22222237-7', '2');
-
-CALL registrar_persona('22222238-8', 'Constanza Leiva', 'constanza.leiva@example.com', 'cleiva', '1234', 'ingeniero') ;
-INSERT INTO Ingeniero_Topico (rut_ingeniero, id_topico) VALUES ('22222238-8', '3');
-
-CALL registrar_persona('22222239-9', 'Álvaro Bravo', 'alvaro.bravo@example.com', 'abravo', '1234', 'ingeniero') ;
-INSERT INTO Ingeniero_Topico (rut_ingeniero, id_topico) VALUES ('22222239-9', '1');
-
-CALL registrar_persona('22222240-K', 'Lucía Cornejo', 'lucia.cornejo@example.com', 'lcornejo', '1234', 'ingeniero') ;
-INSERT INTO Ingeniero_Topico (rut_ingeniero, id_topico) VALUES ('22222240-K', '2');
+CALL registrar_persona('22222221-1', 'Rodrigo López', 'rodrigo.lopez@example.com', 'rlopez', '1234', 'administrador') ;
+CALL registrar_persona('22222222-2', 'María Contreras', 'maria.contreras@example.com', 'mcontreras', '1234', 'administrador') ;
+CALL registrar_persona('22222223-3', 'Felipe Navarro', 'felipe.navarro@example.com', 'fnavarro', '1234', 'administrador') ;
+CALL registrar_persona('22222224-4', 'Carolina Vega', 'carolina.vega@example.com', 'cvega', '1234', 'administrador') ;
+CALL registrar_persona('22222225-5', 'Jorge Díaz', 'jorge.diaz@example.com', 'jdiaz', '1234', 'administrador') ;
+CALL registrar_persona('22222226-6', 'Francisca Romero', 'francisca.romero@example.com', 'fromero', '1234', 'administrador') ;
+CALL registrar_persona('22222227-7', 'Ricardo Pérez', 'ricardo.perez@example.com', 'rperez', '1234', 'administrador') ;
+CALL registrar_persona('22222228-8', 'Natalia Fuentes', 'natalia.fuentes@example.com', 'nfuentes', '1234', 'administrador') ;
+CALL registrar_persona('22222229-9', 'Claudio Ramírez', 'claudio.ramirez@example.com', 'cramirez', '1234', 'administrador') ;
+CALL registrar_persona('22222230-K', 'Beatriz Silva', 'beatriz.silva@example.com', 'bsilva', '1234', 'administrador') ;
+CALL registrar_persona('22222231-1', 'Gonzalo Torres', 'gonzalo.torres@example.com', 'gtorres', '1234', 'administrador') ;
+CALL registrar_persona('22222232-2', 'Andrea Paredes', 'andrea.paredes@example.com', 'aparedes', '1234', 'administrador') ;
+CALL registrar_persona('22222233-3', 'Cristóbal Herrera', 'cristobal.herrera@example.com', 'cherrera', '1234', 'administrador') ;
+CALL registrar_persona('22222234-4', 'Camila Vargas', 'camila.vargas@example.com', 'cvargas', '1234', 'administrador') ;
+CALL registrar_persona('22222235-5', 'Sebastián Reyes', 'sebastian.reyes@example.com', 'sreyes', '1234', 'administrador') ;
+CALL registrar_persona('22222236-6', 'Patricia Orellana', 'patricia.orellana@example.com', 'porellana', '1234', 'administrador') ;
+CALL registrar_persona('22222237-7', 'Mauricio Salazar', 'mauricio.salazar@example.com', 'msalazar', '1234', 'administrador') ;
+CALL registrar_persona('22222238-8', 'Constanza Leiva', 'constanza.leiva@example.com', 'cleiva', '1234', 'administrador') ;
+CALL registrar_persona('22222239-9', 'Álvaro Bravo', 'alvaro.bravo@example.com', 'abravo', '1234', 'administrador') ;
+CALL registrar_persona('22222240-K', 'Lucía Cornejo', 'lucia.cornejo@example.com', 'lcornejo', '1234', 'administrador') ;

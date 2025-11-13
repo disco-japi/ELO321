@@ -1,7 +1,7 @@
 <?php //Log in
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+mysqli_report(MYSQLI_REPORT_ERROR);
 $servername = "localhost";
 $username = "web";
 $password = "1234";
@@ -69,7 +69,7 @@ if (array_key_exists('tab', $_GET)) $tab = $_GET["tab"]; ?>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ZeroPressure</title>
+  <title>TeleFactory</title>
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
     rel="stylesheet"
@@ -85,19 +85,17 @@ if (array_key_exists('tab', $_GET)) $tab = $_GET["tab"]; ?>
   <header id="header" class="p-3 text-bg-dark" <?php if ($_SERVER['PHP_SELF'] == '/info.php' || $_SERVER['PHP_SELF'] == '/edit.php') echo "style='display:none;'" ?>>
     <div
       class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
-      <h1>ZeroPressure</h1>
+      <h1><i class="bi bi-motherboard-fill"></i> TeleFactory</h1>
       <ul
         class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+        <li><a href="dashboard.php?tab=0" class="nav-link px-2 text-<?php checktab(0, $tab) ?>">Principal <i class="bi bi-house"></i></a></li>
         <?php if ($login) { ?>
-          <li><a href="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>?tab=0" class="nav-link px-2 text-<?php checktab(0, $tab) ?>">Principal <i class="bi bi-house"></i></a></li>
           <?php if ($ingeniero) { ?>
             <li><a href="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>?tab=1" class="nav-link px-2 text-<?php checktab(1, $tab) ?>">Solicitudes de funcionalidad <i class="bi bi-wrench"></i></a></li>
             <li><a href="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>?tab=2" class="nav-link px-2 text-<?php checktab(2, $tab) ?>">Solicitudes de gestión de error <i class="bi bi-bug"></i></a></li>
             <li><a href="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>?tab=3" class="nav-link px-2 text-<?php checktab(3, $tab) ?>">Solicitudes asignadas a mi <i class="bi bi-person"></i></a></li>
           <?php } else { ?>
-            <li><a href="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>?tab=4" class="nav-link px-2 text-<?php checktab(4, $tab) ?>">Mis solicitudes de funcionalidad <i class="bi bi-wrench"></i></a></li>
-            <li><a href="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>?tab=5" class="nav-link px-2 text-<?php checktab(5, $tab) ?>">Mis solicitudes de gestión de error <i class="bi bi-bug"></i></a></li>
-            <li><a href="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>?tab=6" class="nav-link px-2 text-<?php checktab(6, $tab) ?>">Redactar solicitud <i class="bi bi-pencil-square"></i></a></li>
+            <li><a href="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>?tab=5" class="nav-link px-2 text-<?php checktab(5, $tab) ?>">Mis compras <i class="bi bi-person">/a></li>
           <?php } ?>
       </ul>
       <form class="col-12 col-lg-auto mb-0 mb-lg-0 me-lg-3" role="search" action="dashboard.php" method="GET">

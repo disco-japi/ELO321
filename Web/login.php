@@ -10,10 +10,10 @@ session_destroy();
     <div class="row align-items-center g-lg-5 py-5">
       <div class="col-lg-7 text-center text-lg-start">
         <h1 class="display-4 fw-bold lh-1 text-body-emphasis mb-3">
-          ZeroPressure
+          TeleFactory
         </h1>
         <p class="col-lg-10 fs-4">
-          Inicie sesión para hacer uso de las herramientas que ZeroPressure tiene para ti.
+          Inicie sesión para comprar insumos tecnológicos.
         </p>
       </div>
       <div class="col-md-10 mx-auto col-lg-5">

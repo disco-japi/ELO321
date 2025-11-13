@@ -23,8 +23,8 @@
                     Página principal
                   </h1>
                   <p class="lead">
-                    Te damos la bienvenida al dashboard de ZeroPressure. Desde aquí podrás <?php $text = $ingeniero ? "realizar gestión de solicitudes, y revisar cuales estan asignadas a ti" : "revisar el estado de tus solicitudes, y redactar solicitudes nuevas";
-                                                                                            echo $text; ?>.
+                    Te damos la bienvenida al dashboard de TeleFactory. Desde aquí podrás <?php $text = $ingeniero ? "realizar gestión de solicitudes, y revisar cuales estan asignadas a ti" : "revisar el estado de tus solicitudes, y redactar solicitudes nuevas";
+                                                                                          echo $text; ?>.
                   </p>
                 </div>
               </div>
