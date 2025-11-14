@@ -1,7 +1,6 @@
 <?php require "base.php";
 if ($login) {
 	$id = $_GET["id"];
-	$fun = intval($_GET["fun"]);
 ?>
 	<div class="modal-header">
 		<h5>Editando solicitud de venta <?php echo " n° " . $id; ?></h5>

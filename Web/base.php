@@ -1,13 +1,16 @@
 <?php //Log in
-ini_set('display_errors', 0);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 mysqli_report(MYSQLI_REPORT_ERROR);
-$servername = "localhost";
+$servername = "db";
 $username = "web";
 $password = "1234";
 $login = false;
 $err = "";
 $nombre = "";
-$conn = new mysqli($servername, $username, $password, "basesita");
+$conn = new mysqli($servername, $username, $password, "telefactory");
 $tab = 0;
 $nombre = "";
 if ($conn->connect_error) {
@@ -55,7 +58,7 @@ if ($conn->connect_error) {
 }
 function checktab($Ltab, $tab)
 {
-  if ($Ltab == $tab) {
+  if ($Ltab == $tab && $_SERVER['PHP_SELF'] == '/dashboard.php') {
     echo "secondary";
   } else {
     echo "white";

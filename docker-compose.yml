@@ -1,0 +1,28 @@
+services:
+  web:
+    build: ./apache
+    container_name: web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./Web:/var/www/html
+      - ./apache/vhost.conf:/etc/apache2/sites-enabled/000-default.conf
+    depends_on:
+      - db
+
+  db:
+    image: mariadb:11
+    container_name: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: telefactory
+      MYSQL_USER: web
+      MYSQL_PASSWORD: 1234
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+volumes:
+  mariadb_data:
