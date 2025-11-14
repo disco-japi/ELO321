@@ -61,6 +61,7 @@ CREATE TABLE Item(
     descripcion VARCHAR(200) NOT NULL,
     topico_id INT NOT NULL,
     disponible INT NOT NULL,
+    precio INT NOT NULL,
     FOREIGN KEY (topico_id) REFERENCES Topicos(id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
@@ -87,6 +88,19 @@ CREATE TABLE Resena_Item(
 
 -- procedimiento de registrar una persona
 DELIMITER //
+
+CREATE PROCEDURE registrar_item(
+    IN p_nombre VARCHAR(50),
+    IN p_descripcion TEXT,
+    IN p_id_topico INT,
+    IN p_stock INT
+    IN p_precio INT
+) 
+BEGIN 
+    INSERT INTO Item (nombre, descripcion, topico_id, disponible, precio) 
+    VALUES (p_nombre, p_descripcion, p_id_topico, p_stock, p_precio);
+END;
+//
 
 CREATE PROCEDURE registrar_persona(
     IN p_rut VARCHAR(12),
@@ -138,8 +152,24 @@ CREATE PROCEDURE registrar_compra(
     IN p_estado_id INT
 )
 BEGIN
-    INSERT INTO GestionCompras (id_item, fecha_publicacion, usuario_rut, estado_id)
-    VALUES (p_id_item, CURDATE(), p_usuario_rut, p_estado_id);
+    DECLARE v_disponible INT;
+
+    SELECT disponible INTO v_disponible
+    FROM Item
+    WHERE id = p_id_item;
+
+    IF v_disponible IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Item no encontrado';
+    ELSEIF v_disponible <= 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No hay existencias';
+    ELSE
+        INSERT INTO GestionCompras (id_item, fecha_publicacion, usuario_rut, estado_id)
+        VALUES (p_id_item, CURDATE(), p_usuario_rut, p_estado_id);
+
+        UPDATE Item
+        SET disponible = disponible - 1
+        WHERE id = p_id_item;
+    END IF;
 END;
 //
 
@@ -217,7 +247,7 @@ INSERT INTO Topicos (id, nombre) VALUES
 (1, 'Hardware'),
 (2, 'Software'),
 (3, 'Consumo'),
-(4, 'Desarrollo');
+(4, 'Electronica de desarrollo');
 
 INSERT INTO Estado (id, nombre) VALUES
 (1, 'En logistica'),
@@ -268,3 +298,32 @@ CALL registrar_persona('22222237-7', 'Mauricio Salazar', 'mauricio.salazar@examp
 CALL registrar_persona('22222238-8', 'Constanza Leiva', 'constanza.leiva@example.com', 'cleiva', '1234', 'administrador') ;
 CALL registrar_persona('22222239-9', 'Álvaro Bravo', 'alvaro.bravo@example.com', 'abravo', '1234', 'administrador') ;
 CALL registrar_persona('22222240-K', 'Lucía Cornejo', 'lucia.cornejo@example.com', 'lcornejo', '1234', 'administrador') ;
+
+-- ==== ITEMS (5 por tópico) ====
+-- Topico 1: Hardware
+CALL registrar_item('SSD 1TB', 'Unidad de estado sólido SATA 1TB, 2.5\"', 1, 12, 39990);
+CALL registrar_item('Memoria RAM 16GB', 'DDR4 3200MHz, módulo 16GB', 1, 7, 14990);
+CALL registrar_item('Fuente ATX 650W', 'Fuente certificada 80+ Bronze, 650W', 1, 4, 59990);
+CALL registrar_item('Placa madre ATX', 'Placa madre compatible Intel/AMD, socket moderno', 1, 0, 89990);
+CALL registrar_item('GPU GeForce GTX 1660', 'Tarjeta gráfica para gaming 6GB GDDR5', 1, 2, 119990);
+
+-- Topico 2: Software (pagado)
+CALL registrar_item('Licencia Office 365', 'Suscripción anual Microsoft 365 Personal', 2, 9, 39990);
+CALL registrar_item('Antivirus Pro McAfee', 'Licencia 1 año para 1 equipo, soporte técnico', 2, 3, 19990);
+CALL registrar_item('IDE Profesional', 'Licencia de IDE con herramientas avanzadas', 2, 6,49990);
+CALL registrar_item('Suite Diseño Pro', 'Suite de diseño gráfico y edición profesional', 2, 5,89990);
+CALL registrar_item('ERP Pyme', 'Licencia ERP para pequeñas empresas, 1 usuario', 2, 1,139990);
+
+-- Topico 3: Electrónica de consumo
+CALL registrar_item('Auriculares Bluetooth', 'In-ear Bluetooth con cancelación de ruido', 3, 14,34990);
+CALL registrar_item('Smartwatch', 'Reloj inteligente con pulsómetro y GPS', 3, 5,129990);
+CALL registrar_item('Cámara 4K', 'Cámara compacta 4K para video y fotos', 3, 229990);
+CALL registrar_item('Altavoz Bluetooth', 'Altavoz portátil con batería de larga duración', 3, 8,49990);
+CALL registrar_item('Tablet 10\"', 'Tablet 10 pulgadas, pantalla HD, 32GB', 3, 0,150990);
+
+-- Topico 4: Electrónica de desarrollo
+CALL registrar_item('Protoboard 400 puntos', 'Protoboard para prototipado, 400 puntos', 4, 11,4990);
+CALL registrar_item('Kit Arduino Uno', 'Placa Arduino Uno R3 + cables y LEDs', 4, 8,20990);
+CALL registrar_item('Pack sensores', 'Sensor temperatura, ultrasonido y luz', 4, 0,10990);
+CALL registrar_item('Módulo ESP32', 'Módulo ESP32 WiFi/Bluetooth para desarrollo', 4, 13,2990);
+CALL registrar_item('Kit jumper y cableado', 'Juego de cables jumper macho-macho, 75 unidades', 4, 6,2990);

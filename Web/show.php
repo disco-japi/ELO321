@@ -49,25 +49,16 @@
       .catch(err => {
         editContent.innerHTML = `<div class="alert alert-danger">Error: ${err.message}</div>`;
       });
-
   }
 </script>
 <?php
 if (array_key_exists("edit", $_POST)) {
   $EID = $_POST["id"];
-  $nombre = $_POST["titulo"];
-  $descripcion = $_POST["desc"];
   $estado = $_POST["est"];
-  if (array_key_exists("editfun", $_POST)) {
-    $ambiente = $_POST["amb"];
-    $cr1 = $_POST["cr1"];
-    $cr2 = $_POST["cr2"];
-    $cr3 = $_POST["cr3"];
-  }
   $sql = array_key_exists("editfun", $_POST) ? "call modificar_funcionalidad($EID,'$rut','$nombre','$descripcion',$ambiente,$estado,'$cr1','$cr2','$cr3')" : "call actualizar_error($EID,'$nombre','$descripcion',$estado,'$rut')";
   $query = $conn->query($sql);
   if ($query != false) {
-    $info = "Solicitud editada";
+    $info = "Venta modificada";
   } else {
     $info = "Error: $conn->error";
   } ?>
@@ -218,12 +209,11 @@ if ($query != false) {
                 <?php } ?>
                 <td>
                   <div class="btn-group" role="group" aria-label="tools">
-                    <?php if (!$administrador && $tab != 7 && $fila["estado"] != "En Progreso") { ?>
+                    <?php if ($administrador) { ?>
                       <button class="btn btn-danger d-inline-flex align-items-center" onclick="showDelete(this);" data-fila="<?php echo $fila["id_elemento"]; ?>" data-error="<?php echo $fila["tipo"]; ?>" type="button">Eliminar <i class="bi bi-x-lg"></i></button>
                     <?php }
                     ?>
                     <button class="btn btn-primary d-inline-flex align-items-center" onclick="showInfo(this);" data-fila="<?php echo $fila["id_elemento"]; ?>" data-error="<?php echo $fila["tipo"]; ?>" type="button">Detalles <i class="bi bi-info-lg"></i></button>
-
                   </div>
                 </td>
               <?php } ?>

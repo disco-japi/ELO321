@@ -20,24 +20,22 @@ if ($conn->connect_error) {
   if (count($_SESSION) == 0 && count($_POST) != 0) {
     $nombre_usuario = $_POST["username"];
     $passwd = $_POST['passwd'];
-    $rol = $_POST['rol'];
     $sql = "select validador_login('$nombre_usuario','$passwd') as resultado";
     $result = $conn->query($sql);
     $check = $result->fetch_assoc();
-    if ($check["resultado"] == 'administrador' || $check["resultado"] == 'usuario') {
+    echo $check["resultado"];
+    if ($check["resultado"] == 'Administrador' || $check["resultado"] == 'Usuario') {
       $get = $conn->query("select * from Persona where nombre_usuario = '$nombre_usuario'")->fetch_assoc();
       $_SESSION['nombre'] = $get['nombre'];
       $_SESSION['rut'] = $get['rut'];
       $_SESSION['nombre_usuario'] = $nombre_usuario;
-      if (array_key_exists('rol', $_POST)) {
-        if ($_POST['rol'] == 'Administrador') {
-          $_SESSION['administrador'] = true;
-        } else {
-          $_SESSION['administrador'] = false;
-        }
+      if ($check["resultado"] == 'Administrador') {
+        $_SESSION['administrador'] = true;
+      } else if ($check["resultado"] == 'Usuario') {
+        $_SESSION['administrador'] = false;
       }
     } else {
-      $err = "Nombre de usuario, contraseña o rol incorrectos.";
+      $err = "Nombre de usuario o contraseña incorrectos.";
     }
   } else if (count($_SESSION) == 0 && count($_POST) == 0) {
     $err = "Sesión inválida, por favor, inicie sesión.";
@@ -95,7 +93,7 @@ if (array_key_exists('tab', $_GET)) $tab = $_GET["tab"]; ?>
           <?php if ($administrador) { ?>
             <li><a href="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>?tab=1" class="nav-link px-2 text-<?php checktab(1, $tab) ?>">Ventas <i class="bi bi-wrench"></i></a></li>
           <?php } else { ?>
-            <li><a href="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>?tab=5" class="nav-link px-2 text-<?php checktab(5, $tab) ?>">Mis compras <i class="bi bi-person">/a></li>
+            <li><a href="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>?tab=2" class="nav-link px-2 text-<?php checktab(5, $tab) ?>">Mis compras <i class="bi bi-person"></i></a></li>
         <?php }
         } ?>
       </ul>
