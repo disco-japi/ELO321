@@ -124,17 +124,17 @@ if (array_key_exists("delete", $_POST)) {
 <?php
 }
 $sql = '';
-//Funcionalidades Ingeniero
+//Funcionalidades Administrador
 if ($tab == 1) {
   $sql = "select * from Vista_Publicaciones_Usuario where tipo COLLATE utf8mb4_unicode_ci = 'Funcionalidad'";
 ?>
   <h2>Solicitudes de funcionalidad</h2>
-<?php //Errores Ingeniero
+<?php //Compras Administrador
 } else if ($tab == 2) {
   $sql = "select * from Vista_Publicaciones_Usuario where tipo COLLATE utf8mb4_unicode_ci = 'Error'";
 ?>
   <h2>Solicitudes de gestión de error</h2>
-<?php //Propias ingeniero
+<?php //Propias administrador
 } else if ($tab == 3) {
   $sql = "select * from Vista_Asignaciones_Ingeniero where rut_ingeniero = '$rut'";
 ?>
@@ -145,7 +145,7 @@ if ($tab == 1) {
   $sql = "select * from Vista_Publicaciones_Usuario where rut_usuario = '$rut' and tipo COLLATE utf8mb4_unicode_ci = 'Funcionalidad'";
 ?>
   <h2>Mis solicitudes de funcionalidad</h2>
-<?php //Errores
+<?php //Compras
 } else if ($tab == 5) {
   $sql = "select * from Vista_Publicaciones_Usuario where rut_usuario = '$rut' and tipo COLLATE utf8mb4_unicode_ci = 'Error'";
 ?>
@@ -218,7 +218,7 @@ if ($query != false) {
                 <?php } ?>
                 <td>
                   <div class="btn-group" role="group" aria-label="tools">
-                    <?php if (!$ingeniero && $tab != 7 && $fila["estado"] != "En Progreso") { ?>
+                    <?php if (!$administrador && $tab != 7 && $fila["estado"] != "En Progreso") { ?>
                       <button class="btn btn-danger d-inline-flex align-items-center" onclick="showDelete(this);" data-fila="<?php echo $fila["id_elemento"]; ?>" data-error="<?php echo $fila["tipo"]; ?>" type="button">Eliminar <i class="bi bi-x-lg"></i></button>
                     <?php }
                     ?>

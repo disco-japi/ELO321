@@ -44,7 +44,7 @@ if ($login) {
 						<thead>
 							<tr>
 								<th scope="col">ID</th>
-								<th scope="col">Ingeniero</th>
+								<th scope="col">Administrador</th>
 								<th scope="col">Observación</th>
 								<th scope="col">Fecha Creación</th>
 							</tr>
@@ -65,7 +65,7 @@ if ($login) {
 				} else {
 					echo "<p>Esta solicitud no tiene reseñas</p>";
 				}
-				if ($ingeniero) { ?>
+				if ($administrador) { ?>
 					<form class="col-12 col-lg-auto mb-0 mb-lg-0 me-lg-3" action="dashboard.php?tab=<?php echo $tab; ?>" method="POST">
 						<input type="hidden" name="sendresena" value="1">
 						<input type="hidden" name="resenaid" value="<?php echo $id; ?>">

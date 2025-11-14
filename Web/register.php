@@ -17,10 +17,6 @@
 			$rol = $_POST["rol"];
 			$email = $_POST["email"];
 			if ($conn->query("CALL registrar_persona('$rut','$nombre','$email','$nombre_usuario','$passwd','$rol')") != false) {
-				if ($rol == "ingeniero") {
-					$especialidad = $_POST["esp"];
-					$conn->query("INSERT INTO `Ingeniero_Topico` (`rut_ingeniero`, `id_topico`) VALUES ('$rut', '$especialidad');");
-				}
 				$info = "Usuario creado con exito, por favor, inicie sesión con sus credenciales.<br>";
 			} else {
 				$info = "Error desconocido.<br>";
@@ -67,16 +63,8 @@
 				¿Que rol cumples?<br>
 				<input type="radio" class="form-check-input" id="usr" name="rol" value="usuario" checked="true" oninput="checkradio()">
 				<label for="usr">Usuario</label><br>
-				<input type="radio" class="form-check-input" id="ing" name="rol" value="ingeniero" oninput="checkradio()">
-				<label for="ing">Ingeniero</label><br>
-				<div id="esp">
-					<label for="esp">Selecciona una especialidad</label><br>
-					<select class="form-select mb-3" name="esp">
-						<option value="1">Backend</option>
-						<option value="2">Seguridad</option>
-						<option value="3">UX/UI</option>
-					</select>
-				</div>
+				<input type="radio" class="form-check-input" id="ing" name="rol" value="administrador" oninput="checkradio()">
+				<label for="ing">Administrador</label><br>
 				<div class="form-floating mb-3"><input class="form-control" maxlength="255" required type="password" label="passwd" name="passwd" id="passwd" placeholder="Contraseña"><label for="passwd">Contraseña</label></div>
 				<div class="form-floating mb-3"><input class="form-control" maxlength="255" required type="password" label="passwd2" name="passwd2" id="passwd2" placeholder="Confirmación de contraseña"><br><label for="passwd2">Confirmación de contraseña</label></div>
 				<input type="submit" class="btn btn-primary px-4" value="Registro" />

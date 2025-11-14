@@ -38,11 +38,6 @@ session_destroy();
               placeholder="Contraseña" />
             <label for="passwd">Contraseña</label>
           </div>
-          ¿Que rol cumples?<br>
-          <input type="radio" class="form-check-input" id="usr" name="rol" value="Usuario" checked="true">
-          <label for="usr">Usuario</label><br>
-          <input type="radio" class="form-check-input" id="ing" name="rol" value="Ingeniero">
-          <label for="ing">Ingeniero</label><br>
           <button class="w-100 btn btn-lg btn-primary" type="submit">
             Iniciar sesión
           </button>
