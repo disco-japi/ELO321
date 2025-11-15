@@ -83,10 +83,12 @@ if (array_key_exists('tab', $_GET)) $tab = $_GET["tab"]; ?>
 
   <header id="header" class="p-3 text-bg-dark" <?php if ($_SERVER['PHP_SELF'] == '/info.php' || $_SERVER['PHP_SELF'] == '/edit.php') echo "style='display:none;'" ?>>
     <div class="container d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
-      <h1><i class="bi bi-motherboard-fill"></i> TeleFactory</h1>
+      <a href="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>?tab=0" class="nav-link px-2 text-white">
+        <h1><i class="bi bi-motherboard-fill"></i> TeleFactory</h1>
+      </a>
       <ul
         class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-        <li><a href="dashboard.php?tab=0" class="nav-link px-2 text-<?php checktab(0, $tab) ?>">Principal <i class="bi bi-house"></i></a></li>
+        <li><a href="dashboard.php?tab=3" class="nav-link px-2 text-<?php checktab(3, $tab) ?>">Todo <i class="bi bi-house"></i></a></li>
         <?php if ($login) { ?>
           <?php if ($administrador) { ?>
             <li><a href="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>?tab=1" class="nav-link px-2 text-<?php checktab(1, $tab) ?>">Ventas <i class="bi bi-wrench"></i></a></li>
@@ -96,7 +98,7 @@ if (array_key_exists('tab', $_GET)) $tab = $_GET["tab"]; ?>
         } ?>
       </ul>
       <form class="col-12 col-lg-auto mb-0 mb-lg-0 me-lg-3" role="search" action="dashboard.php" method="GET">
-        <input type="hidden" name="tab" value="7" />
+        <input type="hidden" name="tab" value="4" />
         <div class="input-group mb-0">
           <input
             type="search"
