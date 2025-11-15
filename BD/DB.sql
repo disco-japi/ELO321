@@ -23,7 +23,7 @@ CREATE TABLE Administrador(
         ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-CREATE TABLE Topicos(
+CREATE TABLE tipos(
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(50) UNIQUE NOT NULL
 );
@@ -59,10 +59,10 @@ CREATE TABLE Item(
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(50) UNIQUE NOT NULL,
     descripcion VARCHAR(200) NOT NULL,
-    topico_id INT NOT NULL,
-    disponible INT NOT NULL,
+    tipo_id INT NOT NULL,
+    stock INT NOT NULL,
     precio INT NOT NULL,
-    FOREIGN KEY (topico_id) REFERENCES Topicos(id) ON DELETE RESTRICT ON UPDATE CASCADE
+    FOREIGN KEY (tipo_id) REFERENCES tipos(id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 CREATE TABLE GestionCompras(
@@ -92,13 +92,13 @@ DELIMITER //
 CREATE PROCEDURE registrar_item(
     IN p_nombre VARCHAR(50),
     IN p_descripcion TEXT,
-    IN p_id_topico INT,
-    IN p_stock INT
+    IN p_id_tipo INT,
+    IN p_stock INT,
     IN p_precio INT
 ) 
 BEGIN 
-    INSERT INTO Item (nombre, descripcion, topico_id, disponible, precio) 
-    VALUES (p_nombre, p_descripcion, p_id_topico, p_stock, p_precio);
+    INSERT INTO Item (nombre, descripcion, tipo_id, stock, precio) 
+    VALUES (p_nombre, p_descripcion, p_id_tipo, p_stock, p_precio);
 END;
 //
 
@@ -152,22 +152,22 @@ CREATE PROCEDURE registrar_compra(
     IN p_estado_id INT
 )
 BEGIN
-    DECLARE v_disponible INT;
+    DECLARE v_stock INT;
 
-    SELECT disponible INTO v_disponible
+    SELECT stock INTO v_stock
     FROM Item
     WHERE id = p_id_item;
 
-    IF v_disponible IS NULL THEN
+    IF v_stock IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Item no encontrado';
-    ELSEIF v_disponible <= 0 THEN
+    ELSEIF v_stock <= 0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No hay existencias';
     ELSE
         INSERT INTO GestionCompras (id_item, fecha_publicacion, usuario_rut, estado_id)
         VALUES (p_id_item, CURDATE(), p_usuario_rut, p_estado_id);
 
         UPDATE Item
-        SET disponible = disponible - 1
+        SET stock = stock - 1
         WHERE id = p_id_item;
     END IF;
 END;
@@ -243,7 +243,18 @@ JOIN Usuario u ON ge.usuario_rut = u.rut
 JOIN Persona p ON u.rut = p.rut
 JOIN Estado e ON ge.estado_id = e.id;
 
-INSERT INTO Topicos (id, nombre) VALUES
+-- vista para todos los items con información completa
+CREATE VIEW Vista_Items AS
+SELECT i.id,
+       i.nombre,
+       i.descripcion,
+       i.stock AS stock,
+       i.precio,
+       t.nombre AS nombre_tipo
+FROM Item i
+JOIN tipos t ON i.tipo_id = t.id;
+
+INSERT INTO tipos (id, nombre) VALUES
 (1, 'Hardware'),
 (2, 'Software'),
 (3, 'Consumo'),
@@ -300,28 +311,28 @@ CALL registrar_persona('22222239-9', 'Álvaro Bravo', 'alvaro.bravo@example.com'
 CALL registrar_persona('22222240-K', 'Lucía Cornejo', 'lucia.cornejo@example.com', 'lcornejo', '1234', 'administrador') ;
 
 -- ==== ITEMS (5 por tópico) ====
--- Topico 1: Hardware
+-- tipo 1: Hardware
 CALL registrar_item('SSD 1TB', 'Unidad de estado sólido SATA 1TB, 2.5\"', 1, 12, 39990);
 CALL registrar_item('Memoria RAM 16GB', 'DDR4 3200MHz, módulo 16GB', 1, 7, 14990);
 CALL registrar_item('Fuente ATX 650W', 'Fuente certificada 80+ Bronze, 650W', 1, 4, 59990);
 CALL registrar_item('Placa madre ATX', 'Placa madre compatible Intel/AMD, socket moderno', 1, 0, 89990);
 CALL registrar_item('GPU GeForce GTX 1660', 'Tarjeta gráfica para gaming 6GB GDDR5', 1, 2, 119990);
 
--- Topico 2: Software (pagado)
+-- tipo 2: Software (pagado)
 CALL registrar_item('Licencia Office 365', 'Suscripción anual Microsoft 365 Personal', 2, 9, 39990);
 CALL registrar_item('Antivirus Pro McAfee', 'Licencia 1 año para 1 equipo, soporte técnico', 2, 3, 19990);
 CALL registrar_item('IDE Profesional', 'Licencia de IDE con herramientas avanzadas', 2, 6,49990);
 CALL registrar_item('Suite Diseño Pro', 'Suite de diseño gráfico y edición profesional', 2, 5,89990);
 CALL registrar_item('ERP Pyme', 'Licencia ERP para pequeñas empresas, 1 usuario', 2, 1,139990);
 
--- Topico 3: Electrónica de consumo
+-- tipo 3: Electrónica de consumo
 CALL registrar_item('Auriculares Bluetooth', 'In-ear Bluetooth con cancelación de ruido', 3, 14,34990);
-CALL registrar_item('Smartwatch', 'Reloj inteligente con pulsómetro y GPS', 3, 5,129990);
-CALL registrar_item('Cámara 4K', 'Cámara compacta 4K para video y fotos', 3, 229990);
+CALL registrar_item('Smartwatch', 'Reloj inteligente con pulsómetro y GPS', 3, 5, 129990);
+CALL registrar_item('Cámara 4K', 'Cámara compacta 4K para video y fotos', 3, 2, 29990);
 CALL registrar_item('Altavoz Bluetooth', 'Altavoz portátil con batería de larga duración', 3, 8,49990);
 CALL registrar_item('Tablet 10\"', 'Tablet 10 pulgadas, pantalla HD, 32GB', 3, 0,150990);
 
--- Topico 4: Electrónica de desarrollo
+-- tipo 4: Electrónica de desarrollo
 CALL registrar_item('Protoboard 400 puntos', 'Protoboard para prototipado, 400 puntos', 4, 11,4990);
 CALL registrar_item('Kit Arduino Uno', 'Placa Arduino Uno R3 + cables y LEDs', 4, 8,20990);
 CALL registrar_item('Pack sensores', 'Sensor temperatura, ultrasonido y luz', 4, 0,10990);

@@ -13,6 +13,7 @@ $nombre = "";
 $conn = new mysqli($servername, $username, $password, "telefactory");
 $tab = 0;
 $nombre = "";
+$administrador = false;
 if ($conn->connect_error) {
   $err = ("Error de conexión a base de datos: " . $conn->connect_error);
 } else if ($_SERVER['PHP_SELF'] != '/login.php' && $_SERVER['PHP_SELF'] != '/register.php' && $_SERVER['PHP_SELF'] != '/procregister.php') {
@@ -23,7 +24,6 @@ if ($conn->connect_error) {
     $sql = "select validador_login('$nombre_usuario','$passwd') as resultado";
     $result = $conn->query($sql);
     $check = $result->fetch_assoc();
-    echo $check["resultado"];
     if ($check["resultado"] == 'Administrador' || $check["resultado"] == 'Usuario') {
       $get = $conn->query("select * from Persona where nombre_usuario = '$nombre_usuario'")->fetch_assoc();
       $_SESSION['nombre'] = $get['nombre'];
@@ -37,8 +37,6 @@ if ($conn->connect_error) {
     } else {
       $err = "Nombre de usuario o contraseña incorrectos.";
     }
-  } else if (count($_SESSION) == 0 && count($_POST) == 0) {
-    $err = "Sesión inválida, por favor, inicie sesión.";
   }
   if (count($_SESSION) != 0) {
     $administrador = $_SESSION['administrador'];
@@ -82,9 +80,9 @@ if (array_key_exists('tab', $_GET)) $tab = $_GET["tab"]; ?>
       height: 80%
     }
   </style>
+
   <header id="header" class="p-3 text-bg-dark" <?php if ($_SERVER['PHP_SELF'] == '/info.php' || $_SERVER['PHP_SELF'] == '/edit.php') echo "style='display:none;'" ?>>
-    <div
-      class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+    <div class="container d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
       <h1><i class="bi bi-motherboard-fill"></i> TeleFactory</h1>
       <ul
         class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
@@ -93,7 +91,7 @@ if (array_key_exists('tab', $_GET)) $tab = $_GET["tab"]; ?>
           <?php if ($administrador) { ?>
             <li><a href="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>?tab=1" class="nav-link px-2 text-<?php checktab(1, $tab) ?>">Ventas <i class="bi bi-wrench"></i></a></li>
           <?php } else { ?>
-            <li><a href="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>?tab=2" class="nav-link px-2 text-<?php checktab(5, $tab) ?>">Mis compras <i class="bi bi-person"></i></a></li>
+            <li><a href="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>?tab=2" class="nav-link px-2 text-<?php checktab(2, $tab) ?>">Mis compras <i class="bi bi-person"></i></a></li>
         <?php }
         } ?>
       </ul>

@@ -1,53 +1,29 @@
 <?php require 'base.php'; ?>
 
 <body>
-  <div class="container py-5">
+  <div class="container py-3">
     <center>
       <?php
-      if ($login) {
-        switch ($tab) {
-          case 0: ?>
-            <div class="container py-5">
-            </div>
-
-      <?php break;
-          case 1:
-            if ($administrador) {
-              require 'show.php';
-            }
-            break;
-          case 2:
-            if ($administrador) {
-              require 'show.php';
-            }
-            break;
-          case 3:
-            if ($administrador) {
-              require 'show.php';
-            }
-            break;
-          case 4:
-            if (!$administrador) {
-              require 'show.php';
-            }
-            break;
-          case 5:
-            if (!$administrador) {
-              require 'show.php';
-            }
-            break;
-          case 6:
-            if (!$administrador) {
-              require 'request.php';
-            }
-            break;
-          case 7:
+      switch ($tab) {
+        case 0:
+          require 'show.php';
+          break;
+        case 1:
+          if ($login && $administrador) {
             require 'show.php';
-            break;
-          case 8:
+          }
+          break;
+        case 2:
+          if ($login && !$administrador) {
             require 'show.php';
-            break;
-        }
+          }
+          break;
+        case 3:
+          require 'show.php';
+          break;
+        case 4:
+          require 'show.php';
+          break;
       } ?>
     </center>
   </div>

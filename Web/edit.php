@@ -12,10 +12,10 @@ if ($login) {
 			<div id="est">
 				<label for="est" class="form-label">Estado</label><br>
 				<select class="form-select mb-3" name="est">
-					<option value="1">Abierto</option>
-					<option value="2">En Progreso</option>
-					<option value="3">Resuelto</option>
-					<option value="4">Cerrado</option>
+					<option value="1">En logistica</option>
+					<option value="2">En camino</option>
+					<option value="3">Entregado</option>
+					<option value="4">Confirmado</option>
 				</select>
 			</div>
 		</div>
