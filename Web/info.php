@@ -48,7 +48,7 @@ if ($query != false) {
 				echo "<p>Este item no tiene comentarios</p>";
 			}
 			if ($login && !$administrador) { ?>
-				<form class="col-12 col-lg-auto mb-0 mb-lg-0 me-lg-3" action="dashboard.php?tab=<?php echo $tab; ?>" method="POST">
+				<form class="col-12 col-lg-auto mb-0 mb-lg-0 me-lg-3" action="index.php?tab=<?php echo $tab; ?>" method="POST">
 					<input type="hidden" name="sendresena" value="1">
 					<input type="hidden" name="resenaid" value="<?php echo $id; ?>">
 					<div class="input-group mb-0">

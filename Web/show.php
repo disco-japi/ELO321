@@ -37,12 +37,8 @@
 
   function showEdit(fila) {
     let nFila = fila.getAttribute("data-fila");
-    let fun = 0;
-    if (fila.getAttribute("data-fun") != "") {
-      fun = 1;
-    }
     const editContent = document.getElementById("info-content");
-    fetch("edit.php?fun=" + encodeURIComponent(fun) + "&id=" + encodeURIComponent(nFila) + "&tab=" + encodeURIComponent(<?php echo $tab; ?>))
+    fetch("edit.php?id=" + encodeURIComponent(nFila) + "&tab=" + encodeURIComponent(<?php echo $tab; ?>))
       .then(response => {
         if (!response.ok) throw new Error("Error de red");
         return response.text();
@@ -53,13 +49,17 @@
       .catch(err => {
         editContent.innerHTML = `<div class="alert alert-danger">Error: ${err.message}</div>`;
       });
+    var infoModal = new bootstrap.Modal(document.getElementById('ModalInfo'), {
+      keyboard: false
+    });
+    infoModal.show();
   }
 </script>
 <?php
 if (array_key_exists("edit", $_POST)) {
   $EID = $_POST["id"];
   $estado = $_POST["est"];
-  $sql = array_key_exists("editfun", $_POST) ? "call modificar_funcionalidad($EID,'$rut','$nombre','$descripcion',$ambiente,$estado,'$cr1','$cr2','$cr3')" : "call actualizar_error($EID,'$nombre','$descripcion',$estado,'$rut')";
+  $sql =  "call actualizar_compra($EID, $estado)";
   $query = $conn->query($sql);
   if ($query != false) {
     $info = "Venta modificada";
@@ -146,6 +146,11 @@ if ($tab == 0) {
   $sql = "select * from Vista_Items";
 ?>
   <h2 class="fw-light">Todos los Items</h2>
+<?php } else if ($tab == 4) {
+  $search = $_GET["search"];
+  $sql = "select * from Vista_Items where nombre LIKE '%$search%'";
+?>
+  <h2 class="fw-light">Resultados busqueda "<?php echo $search; ?>"</h2>
 <?php //Compras Usuario
 } else if ($tab == 2) {
   $sql = "select * from Vista_Compras_Usuario where rut_usuario = '$rut'";
@@ -225,7 +230,7 @@ if ($tab == 0 && $query != false) { ?>
                   <td>
                     <div class="btn-group" role="group" aria-label="tools">
                       <?php if ($administrador) { ?>
-                        <button class="btn btn-danger d-inline-flex align-items-center" onclick="showDelete(this);" data-fila="<?php echo $fila["id_compra"]; ?>" type="button">Eliminar <i class="bi bi-x-lg"></i></button>
+                        <button class="btn btn-warning d-inline-flex align-items-center" onclick="showEdit(this);" data-fila="<?php echo $fila["id_compra"]; ?>" type="button">Editar <i class="bi bi-pencil"></i></button>
                       <?php }
                       ?>
                       <button class="btn btn-primary d-inline-flex align-items-center" onclick="showInfo(this);" data-fila="<?php echo $fila["id_item"]; ?>" type="button">Detalles <i class="bi bi-info-lg"></i></button>
@@ -236,7 +241,7 @@ if ($tab == 0 && $query != false) { ?>
           </tbody>
         </table>
       </div>
-    <?php } else if ($tab == 3) { ?>
+    <?php } else if ($tab == 3 || $tab == 4) { ?>
       <div class="table-responsive">
         <table class="table align-middle border rounded-3 shadow-lg">
           <thead>
@@ -259,10 +264,7 @@ if ($tab == 0 && $query != false) { ?>
                 <td><?php echo $fila["precio"]; ?></td>
                 <td>
                   <div class="btn-group" role="group" aria-label="tools">
-                    <?php if ($administrador) { ?>
-                      <button class="btn btn-danger d-inline-flex align-items-center" onclick="showDelete(this);" data-fila="<?php echo $fila["id_compra"]; ?>" type="button">Eliminar <i class="bi bi-x-lg"></i></button>
-                    <?php }
-                    ?>
+
                     <button class="btn btn-primary d-inline-flex align-items-center" onclick="showInfo(this);" data-fila="<?php echo $fila["id"]; ?>" type="button">Detalles <i class="bi bi-info-lg"></i></button>
                   </div>
                 </td>
@@ -302,7 +304,7 @@ if ($tab == 0 && $query != false) { ?>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <form action="dashboard.php?tab=<?php echo $tab; ?>" method="post">
+            <form action="index.php?tab=<?php echo $tab; ?>" method="post">
               <input type="hidden" name="delete" value="true" />
               <input type="hidden" name="delid" id="delid" value="" />
               <input type="hidden" name="deltype" id="deltype" value="" />
@@ -326,7 +328,7 @@ if ($tab == 0 && $query != false) { ?>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <form action="dashboard.php?tab=<?php echo $tab; ?>" method="post">
+        <form action="index.php?tab=<?php echo $tab; ?>" method="post">
           <input type="hidden" name="buy" />
           <input type="hidden" name="buyid" id="buyid" value="" />
           <button type="submit" class="btn btn-primary">Comprar <i class="bi bi-cart"></i></button>

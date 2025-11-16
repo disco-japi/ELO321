@@ -5,7 +5,7 @@ if ($login) {
 	<div class="modal-header">
 		<h5>Editando solicitud de venta <?php echo " n° " . $id; ?></h5>
 	</div>
-	<form action="dashboard.php?tab=<?php echo $tab; ?>" method="POST">
+	<form action="index.php?tab=<?php echo $tab; ?>" method="POST">
 		<div class=" modal-body">
 			<input type="hidden" name="edit" value="1" />
 			<input type="hidden" name="id" value="<?php echo $id; ?>" />

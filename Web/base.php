@@ -54,7 +54,7 @@ if ($conn->connect_error) {
 }
 function checktab($Ltab, $tab)
 {
-  if ($Ltab == $tab && $_SERVER['PHP_SELF'] == '/dashboard.php') {
+  if ($Ltab == $tab && $_SERVER['PHP_SELF'] == '/index.php') {
     echo "secondary";
   } else {
     echo "white";
@@ -83,21 +83,21 @@ if (array_key_exists('tab', $_GET)) $tab = $_GET["tab"]; ?>
 
   <header id="header" class="p-3 text-bg-dark" <?php if ($_SERVER['PHP_SELF'] == '/info.php' || $_SERVER['PHP_SELF'] == '/edit.php') echo "style='display:none;'" ?>>
     <div class="container d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
-      <a href="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>?tab=0" class="nav-link px-2 text-white">
+      <a href="/index.php" class="nav-link px-2 text-white">
         <h1><i class="bi bi-motherboard-fill"></i> TeleFactory</h1>
       </a>
       <ul
         class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-        <li><a href="dashboard.php?tab=3" class="nav-link px-2 text-<?php checktab(3, $tab) ?>">Todo <i class="bi bi-house"></i></a></li>
+        <li><a href="index.php?tab=3" class="nav-link px-2 text-<?php checktab(3, $tab) ?>">Todo <i class="bi bi-house"></i></a></li>
         <?php if ($login) { ?>
           <?php if ($administrador) { ?>
-            <li><a href="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>?tab=1" class="nav-link px-2 text-<?php checktab(1, $tab) ?>">Ventas <i class="bi bi-wrench"></i></a></li>
+            <li><a href="/index.php?tab=1" class="nav-link px-2 text-<?php checktab(1, $tab) ?>">Ventas <i class="bi bi-wrench"></i></a></li>
           <?php } else { ?>
-            <li><a href="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>?tab=2" class="nav-link px-2 text-<?php checktab(2, $tab) ?>">Mis compras <i class="bi bi-person"></i></a></li>
+            <li><a href="/index.php?tab=2" class="nav-link px-2 text-<?php checktab(2, $tab) ?>">Mis compras <i class="bi bi-person"></i></a></li>
         <?php }
         } ?>
       </ul>
-      <form class="col-12 col-lg-auto mb-0 mb-lg-0 me-lg-3" role="search" action="dashboard.php" method="GET">
+      <form class="col-12 col-lg-auto mb-0 mb-lg-0 me-lg-3" role="search" action="index.php" method="GET">
         <input type="hidden" name="tab" value="4" />
         <div class="input-group mb-0">
           <input

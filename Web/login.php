@@ -17,7 +17,7 @@ session_destroy();
         </p>
       </div>
       <div class="col-md-10 mx-auto col-lg-5">
-        <form class="p-4 p-md-5 border rounded-3 bg-body-tertiary" action="dashboard.php" method="POST" onsubmit="return validate();">
+        <form class="p-4 p-md-5 border rounded-3 bg-body-tertiary" action="index.php" method="POST" onsubmit="return validate();">
           <div class="form-floating mb-3">
             <input
               type="text"
